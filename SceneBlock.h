@@ -4,6 +4,7 @@
 
 #include "MachineWindow.h"
 #include "Cloud.h"
+#include "FactoryPart.h"
 
 class SceneBlock{
 public:
@@ -209,6 +210,7 @@ public:
 };
 
 
+
 class SkyBlock:public SceneBlock{
 	vector<Cloud> acloud;
 	vector<Eye> aeye;
@@ -238,7 +240,7 @@ public:
 	}
 	void drawFbo(){
 		_fbo.begin();
-			//ofClear(0);
+			ofClear(0);
 			//ofBackground(255);
 			
 			for(auto& c:acloud) c.draw(true,0);
@@ -783,6 +785,125 @@ public:
 	void update(){
 		x-=scene_speed*3;		
 	}
+};
+
+class LightBlock:public SceneBlock{
+	//vector<RoadLamp> lamps;
+	float phi;
+    ofVec2f light_pos;
+    ofVec2f light_size;
+    ofColor light_color;
+public:
+	LightBlock(float x_,float y_,float wid_,float hei_,int color_type_):SceneBlock(x_,y_,wid_,hei_,color_type_){
+		scene_type=7;
+		
+		phi=ofRandom(-PI/12,PI/12);
+        light_pos=ofVec2f(wid_/2,hei_/2);
+		light_size=ofVec2f(ofRandom(.1,.4)*wid_,ofRandom(.05,.2)*hei_);
+        light_color=ofColor(220+40*abs(sin(phi)),200+20*abs(sin(phi)),0,180);
+    }
+	
+	
+	void draw(bool draw_fill){
+		//SceneBlock::draw(draw_fill);
+        
+		//float draw_portion=(sin((float)ofGetFrameNum()/(20)));
+		
+		ofPushMatrix();
+		ofTranslate(x+light_pos.x,y+light_pos.y);
+		
+		
+		ofPushStyle();
+		ofSetColor(light_color);
+		ofRect(0,0,light_size.x,light_size.y);
+        
+		ofPopStyle();
+        
+		ofPopMatrix();
+	}
+	void update(){
+		x-=scene_speed*8;
+	}
+    
+    ofVec2f getLightPos(){
+        return light_pos+ofVec2f(x,y);
+    }
+    ofVec2f getLightSize(){
+        return light_size;
+    }
+    ofColor getColor(){
+        return light_color;
+    }
+};
+
+
+class FactoryBlock:public SceneBlock{
+    vector<FactoryPart> parts;
+    vector<FactoryLadder> ladders;
+    vector<FactorySmoke> smokes;
+	ofFbo _fbo;
+public:
+	FactoryBlock(float x_,float y_,float wid_,float hei_,int color_type_):SceneBlock(x_,y_,wid_,hei_,color_type_){
+		scene_type=8;
+        
+		initPart(0);
+        _fbo.allocate(wid,hei,GL_RGBA);
+		drawFbo();
+		
+	}
+	void initPart(int mode){
+        
+        int mhoriz=(int)ofRandom(8,25);
+		float tmpx=0;
+		float tmpy=0;
+        
+		int i=0;
+		//for(int i=0;i<mhoriz;++i){
+		while(tmpx<wid){
+			float tmpw=ofRandom(.2,1)*wid/(float)mhoriz;
+			//if(tmpx+tmpw>wid) break;
+            float tmph=ofRandom(.3,1.2)*hei;
+			tmpy=ofRandom(.75)*hei;
+            parts.push_back(FactoryPart(tmpx,tmpy,tmpw,tmph));
+				
+			tmpx+=tmpw*ofRandom(.8,1.2);
+		}
+        
+        for(int i=0;i<mhoriz;++i){
+            smokes.push_back(FactorySmoke(ofRandom(0,wid),ofRandom(0,hei/2),ofRandom(.1,.8)*wid,ofRandom(.05,.3)*hei));
+        }
+        
+        for(int i=0;i<mhoriz/3.0;++i){
+            ladders.push_back(FactoryLadder(ofRandom(0,wid),ofRandom(0,hei/2),ofRandom(.05,.15)*wid,ofRandom(.6,1.5)*hei));
+        }
+        
+	}
+    void drawFbo(){
+        _fbo.begin();
+        ofClear(0);
+        for(auto& p:parts) p.draw(true);
+        for(auto& p:parts) p.draw(false);
+        
+        for(auto& p:ladders) p.draw(false);
+        
+		_fbo.end();
+    }
+	
+	void draw(bool draw_fill){
+		SceneBlock::draw(draw_fill);
+        
+		float draw_portion=(sin((float)ofGetFrameNum()/(20)));
+		
+		ofPushMatrix();
+		ofTranslate(x,y);
+        
+        _fbo.draw(0,0);
+        for(auto& p:smokes) p.draw(true);
+        
+		ofPopMatrix();
+	}
+    
+    
 };
 
 

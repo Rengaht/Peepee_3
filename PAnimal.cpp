@@ -61,8 +61,8 @@ PAnimal::PAnimal(float x_,float y_,float wid_,float hei_){
 		/*ear_ang=-PI/4;
 		head_ang=-PI/8;*/
 
-		_anim_mode_change=FrameAnimation(ofRandom(20,40),ofRandom(0,10));
-		_anim_walk=FrameAnimation(ofRandom(10,40),ofRandom(10));
+		_anim_mode_change=FrameAnimation(ofRandom(120,240),ofRandom(0,60));
+		_anim_walk=FrameAnimation(ofRandom(60,120),ofRandom(80));
 		_anim_walk.is_loop=true;
 		//_anim_walk.do_reverse=true;
 		_anim_walk.Restart();
@@ -222,9 +222,10 @@ void PAnimal::draw(bool draw_fill){
 					break;
 			}
 		}
-
+	
+#ifdef DDEBUG
 		ofDrawBitmapString(ofToString(_cur_mode)+" "+ofToString(_dest_mode),0,0);
-
+#endif
 		ofPopMatrix();
 		
 

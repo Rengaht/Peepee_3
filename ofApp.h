@@ -1,5 +1,7 @@
 #pragma once
 
+//#define DDEBUG
+
 #include "ofMain.h"
 #include "FieldTexture.h"
 #include "StringSplit.h"
@@ -7,6 +9,7 @@
 #include "PAnimal.h"
 #include "SceneBlock.h"
 #include "Window.h"
+
 
 
 class ofApp : public ofBaseApp{
@@ -32,7 +35,7 @@ class ofApp : public ofBaseApp{
 		float _control_val[3];
 
 		ofSoundPlayer  _sound_bgm[4];
-		ofSerial _serial_ctrl;
+		//ofSerial _serial_ctrl;
 		
 		ofColor SceneColor[5];
 
@@ -68,6 +71,7 @@ class ofApp : public ofBaseApp{
 		float angle_for_mode;
 
 		FrameAnimation _anim_mode_change;
+        FrameAnimation _anim_color_change;
 
 		ofFbo _fbo_fill,_fbo_stroke;
 		DistortGraph _distort_fill;

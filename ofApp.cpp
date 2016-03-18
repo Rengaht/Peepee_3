@@ -43,7 +43,9 @@ void ofApp::setup(){
 	save_frame=false;
 
 	_anim_mode_change=FrameAnimation(50);
-	
+	_anim_color_change=FrameAnimation(120);
+    _anim_color_change.Restart(1);
+    
 	color_stage=0;
 	ocean_type=false;
 	road_sign_num=0;
@@ -113,25 +115,25 @@ void ofApp::initControl(){
 	_control_val[2]=512;
 	
 
-	_serial_ctrl.listDevices();
-
-#ifdef TARGET_WIN32
-	_serial_ctrl.setup(1,9600);
-#endif
-#if defined( TARGET_LINUX )
-		_serial_ctrl.setup("/dev/ttyACM0",9600);
-#endif
+//	_serial_ctrl.listDevices();
+//
+//#ifdef TARGET_WIN32
+//	_serial_ctrl.setup(1,9600);
+//#endif
+//#if defined( TARGET_LINUX )
+//		_serial_ctrl.setup("/dev/ttyACM0",9600);
+//#endif
 
 }
 
 void ofApp::initSound(){
 
-	_sound_bgm[0].loadSound("sound/pipi_train_bright.wav");
-	_sound_bgm[1].loadSound("sound/pipi_train_bright2.wav");
-	_sound_bgm[2].loadSound("sound/pipi_train_dark.wav");
-	_sound_bgm[3].loadSound("sound/pipi_train_dark3.wav");
+	_sound_bgm[0].loadSound("sound/pipi_train_bright.ogg");
+	//_sound_bgm[1].loadSound("sound/pipi_train_bright2.wav");
+	_sound_bgm[2].loadSound("sound/pipi_train_dark.ogg");
+	//_sound_bgm[3].loadSound("sound/pipi_train_dark3.wav");
 
-	sound_index=(int)ofRandom(2);
+	sound_index=0;//(int)ofRandom(2);
 	_sound_vol=1.0;
 	_sound_bgm[sound_index].play();
 	
@@ -156,16 +158,18 @@ void ofApp::update(){
 		if(color_stage%2==0){
 			color_stage=(color_stage+1)%4;
 			cout<<"Stage: "<<color_stage<<endl;
+            _anim_color_change.Restart();
 		}	
 		if(sound_pos>=.99){		
 			color_stage=(color_stage+1)%4;
 			cout<<"Stage: "<<color_stage<<endl;
+            _anim_color_change.Restart();
 
 			_sound_bgm[sound_index].stop();
 			if(color_stage==2){				
-				sound_index=(int)ofRandom(2,4);			
+				sound_index=2;//(int)ofRandom(2,4);			
 			}else if(color_stage==0){
-				sound_index=(int)ofRandom(0,2);
+				sound_index=0;//(int)ofRandom(0,2);
 			}
 			_sound_bgm[sound_index].play();
 			_sound_bgm[sound_index].setVolume(_sound_vol);
@@ -175,10 +179,12 @@ void ofApp::update(){
 	}
 
 
-	for(auto& pa:pas) pa.update(_control_val[3]);
+	for(auto& pa:pas) pa.update(0);
 	_anim_mode_change.Update();
 	if(_anim_mode_change.GetPortion()==1) play_mode=dest_pmode;
 
+    _anim_color_change.Update();
+    
 	for(auto& sb:blocks) sb->update();
 	auto it=blocks.begin();
 	while(it!=blocks.end()){
@@ -233,61 +239,61 @@ void ofApp::update(){
 
 
 
-	//---- handle serial----
-	if(_serial_ctrl.isInitialized() && _serial_ctrl.available()){
-		unsigned char bytesReturned[3];
-		unsigned char bytesReadString[24];
-		int nRead=0;
-		int nTimesRead=0;
-		int nBytesRead=0;
+	////---- handle serial----
+	//if(_serial_ctrl.isInitialized() && _serial_ctrl.available()){
+	//	unsigned char bytesReturned[3];
+	//	unsigned char bytesReadString[24];
+	//	int nRead=0;
+	//	int nTimesRead=0;
+	//	int nBytesRead=0;
 
-		memset(bytesReadString, 0, 24);
-		memset(bytesReturned, 0, 3);
-		
-		while((nRead=_serial_ctrl.readBytes(bytesReturned,3))>0){
-			unsigned char *endchar=(unsigned char*)memchr(bytesReturned,'!',3);
-			if(endchar!=NULL){
-				memcpy(bytesReadString+nBytesRead,bytesReturned,endchar-bytesReturned);
-				break;
-			}
-			memcpy(bytesReadString+nBytesRead,bytesReturned,nRead);
-			nBytesRead+=nRead;		
-		};	
-		//cout<<ofToString(bytesReadString)<<endl;
-		if(nBytesRead>0){
-			string read_string=ofToString(bytesReadString);
-			/*if(read_string.find_last_of('!')==string::npos){
-				return;
-			}*/
+	//	memset(bytesReadString, 0, 24);
+	//	memset(bytesReturned, 0, 3);
+	//	
+	//	while((nRead=_serial_ctrl.readBytes(bytesReturned,3))>0){
+	//		unsigned char *endchar=(unsigned char*)memchr(bytesReturned,'!',3);
+	//		if(endchar!=NULL){
+	//			memcpy(bytesReadString+nBytesRead,bytesReturned,endchar-bytesReturned);
+	//			break;
+	//		}
+	//		memcpy(bytesReadString+nBytesRead,bytesReturned,nRead);
+	//		nBytesRead+=nRead;		
+	//	};	
+	//	//cout<<ofToString(bytesReadString)<<endl;
+	//	if(nBytesRead>0){
+	//		string read_string=ofToString(bytesReadString);
+	//		/*if(read_string.find_last_of('!')==string::npos){
+	//			return;
+	//		}*/
 
-			vector<string> val=split(read_string,'|');
-			//cout<<ofToString(val)<<endl;
-			if(val.size()==M_CONTROL){
-				for(int i=0;i<val.size();++i){
-					int n=ofToInt(val[i]);
-					switch(i){						
-						case 0:
-							if(n!=_control_val[i]) triggerEvent(0);
-							_control_val[i]=n;
-							break;
-						case 1:
-							if(n==0) triggerEvent(1);
-							_control_val[i]=n;
-							break;
-						case 2:
-							if(abs(_control_val[2]-n)<=100){
-								_sound_vol=ofMap(n,0,1024,0,2);
-								_sound_bgm[sound_index].setVolume(_sound_vol);
-								_control_val[i]=n;
-							}
-							break;
-					}
-										
-				}
-				//cout<<ofToString(_control_val)<<endl;
-			}
-		}
-	}
+	//		vector<string> val=split(read_string,'|');
+	//		//cout<<ofToString(val)<<endl;
+	//		if(val.size()==M_CONTROL){
+	//			for(int i=0;i<val.size();++i){
+	//				int n=ofToInt(val[i]);
+	//				switch(i){						
+	//					case 0:
+	//						if(n!=_control_val[i]) triggerEvent(0);
+	//						_control_val[i]=n;
+	//						break;
+	//					case 1:
+	//						if(n==0) triggerEvent(1);
+	//						_control_val[i]=n;
+	//						break;
+	//					case 2:
+	//						if(abs(_control_val[2]-n)<=100){
+	//							_sound_vol=ofMap(n,0,1024,0,2);
+	//							_sound_bgm[sound_index].setVolume(_sound_vol);
+	//							_control_val[i]=n;
+	//						}
+	//						break;
+	//				}
+	//									
+	//			}
+	//			//cout<<ofToString(_control_val)<<endl;
+	//		}
+	//	}
+	//}
 	
 }
 void ofApp::triggerEvent(int ev){
@@ -311,7 +317,7 @@ void ofApp::resetAll(){
 
 	_sound_bgm[sound_index].stop();
 
-	sound_index=(int)ofRandom(2);
+	sound_index=0;//(int)ofRandom(2);
 	_sound_bgm[sound_index].play();
 
 }
@@ -421,6 +427,7 @@ void ofApp::draw(){
 	//WindowTexture::GetInstance()->_fbo.draw(0,0);
 
 	
+#ifdef DDEBUG
 	ofPushStyle();
 	ofSetColor(ofColor::red);		
 		ofDrawBitmapString(ofToString(ofGetFrameRate()),20,20);
@@ -429,7 +436,7 @@ void ofApp::draw(){
 		ofDrawBitmapString(ofToString(sound_index)+" : "+ofToString(_sound_bgm[sound_index].getPosition()),20,80);		
 		ofDrawBitmapString(ofToString(_sound_vol),20,90);
 	ofPopStyle();
-
+#endif
 	if(save_frame) ofSaveFrame(true);
 
 }
@@ -511,8 +518,9 @@ void ofApp::drawWindow(bool draw_fill){
 			sb->draw(true);			
 			
 		}
-
-
+        
+        float color_x=ofGetWidth()*(1-_anim_color_change.GetPortion());
+        ofColor pre_color=SceneColor[(color_stage-1+4)%4];
 		ofPushStyle();
 		ofSetColor(SceneColor[color_stage]);
 
@@ -522,16 +530,48 @@ void ofApp::drawWindow(bool draw_fill){
 			Window w=windows[i];
 			float tx=w.x;//getCurrentX(dx_,w.x,w.wid);
 			
-
-			ofRect(tx,0,w.wid,w.y);			
-			ofRect(tx,w.y+w.hei,w.wid,ofGetHeight()-w.y-w.hei);
-
+            if(tx<color_x){
+                if(tx+w.wid>color_x){
+                    ofPushStyle();
+                        ofSetColor(pre_color);
+                        ofRect(tx,0,color_x-tx,w.y);
+                        ofRect(tx,w.y+w.hei,color_x-tx,ofGetHeight()-w.y-w.hei);
+                    ofPopStyle();
+                
+                    ofRect(color_x,0,tx+w.wid-color_x,w.y);
+                    ofRect(color_x,w.y+w.hei,tx+w.wid-color_x,ofGetHeight()-w.y-w.hei);
+                }else{
+                    ofPushStyle();
+                        ofSetColor(pre_color);
+                        ofRect(tx,0,w.wid,w.y);
+                        ofRect(tx,w.y+w.hei,w.wid,ofGetHeight()-w.y-w.hei);
+                    ofPopStyle();
+                }
+                
+            }else{
+                ofRect(tx,0,w.wid,w.y);
+                ofRect(tx,w.y+w.hei,w.wid,ofGetHeight()-w.y-w.hei);
+            }
 			float wmx=tx+w.wid;
 			float mwid=0;
 			if(i<c-1) mwid=(windows[i+1].x-wmx);
-
-			ofRect(wmx,0,mwid,ofGetHeight());				
-			
+            
+            if(wmx<color_x){
+                if(wmx+mwid>color_x){
+                    ofPushStyle();
+                        ofSetColor(pre_color);
+                        ofRect(wmx,0,color_x-wmx,ofGetHeight());
+                    ofPopStyle();
+                    ofRect(color_x,0,wmx+mwid-color_x,ofGetHeight());
+                }else{
+                    ofPushStyle();
+                    ofSetColor(pre_color);
+                        ofRect(wmx,0,mwid,ofGetHeight());
+                    ofPopStyle();
+                }
+			}else{
+                ofRect(wmx,0,mwid,ofGetHeight());
+            }
 
 		}
 
@@ -544,13 +584,16 @@ void ofApp::drawWindow(bool draw_fill){
 		}*/
 
 	}else{
-		for(auto& win:windows) win.draw(false,0,SceneColor[color_stage]);
+        float color_x=ofGetWidth()*(1-_anim_color_change.GetPortion());
+        ofColor pre_color=SceneColor[(color_stage-1+4)%4];
+		
+		for(auto& win:windows) win.draw(false,0,(win.x<color_x)?pre_color:SceneColor[color_stage]);
 		for(auto& chair:chairs){
-			chair.draw(true,0,SceneColor[color_stage]);
-			chair.draw(false,0,SceneColor[color_stage]);
+			chair.draw(true,0,(chair.x<color_x)?pre_color:SceneColor[color_stage]);
+			chair.draw(false,0,(chair.x<color_x)?pre_color:SceneColor[color_stage]);
 			
 		}
-		for(auto& handle:handles) handle.draw(false,0);
+		for(auto& handle:handles) handle.draw(false,0,(handle.x<color_x)?pre_color:SceneColor[color_stage]);
 
 
 	
@@ -629,6 +672,16 @@ void ofApp::drawWindowLight(){
 			
 		}
 		ofPopStyle();
+    
+    float hei=ofGetHeight();
+    for(auto& lb:front_blocks){
+        if(lb->scene_type==7){
+            ofSetColor(((LightBlock*)lb)->getColor(),60);
+            ofVec2f pos=((LightBlock*)lb)->getLightPos();
+            ofVec2f sze=((LightBlock*)lb)->getLightSize();
+            ofRect(pos.x,shadow_y*2-sze.y-pos.y,sze.x,sze.y*shadow_hei*4);
+        }
+    }
 }
 
 void ofApp::initScene(){
@@ -685,7 +738,7 @@ void ofApp::addNewSceneBlock(){
 			w=width*ofRandom(.6,1.2);				
 			blocks.push_back(new IslandBlock(x,height*.3,w,height*.3,color_type,false,(ocean_type?(ofRandom(2)<1):true),((IslandBlock*)blocks[a-1])->ocean_height));
 		}else{
-			int type=ocean_type?(ofRandom(3)<1?0:(ofRandom(2)<1?3:4)):floor(ofRandom(4));
+			int type=ocean_type?(ofRandom(5)<1?0:(ofRandom(2)<1?4:5)):floor(ofRandom(5));
 					
 			cout<<"create block: "<<x<<" "<<w<<" type: "<<type<<endl;
 
@@ -699,14 +752,20 @@ void ofApp::addNewSceneBlock(){
 					break;
 				case 2:
 					blocks.push_back(new FieldBlock(x,height*.3,w,height*.3,color_type));
-					break;				
-				case 3:
+					break;
+                case 3:
+                    blocks.push_back(new FactoryBlock(x,height*.3,w,height*.3,color_type));
+                    break;
+                    
+				case 4:
 					blocks.push_back(new BeachBlock(x,height*.3,w,height*.3,color_type,true,true,height*.3*ofRandom(.3,.6)));
 					break;
-				case 4:
+				case 5:
 					w=width*ofRandom(.8,1.2);				
 					blocks.push_back(new IslandBlock(x,height*.3,w,height*.3,color_type,true,ofRandom(2)<1,height*.3*ofRandom(.3,.6)));
 					break;
+                    
+                
 				
 			}
 			
@@ -725,7 +784,19 @@ void ofApp::addNewSceneBlock(){
 		}*/
 		
 
-	}	
+	}
+    
+    
+//    if(color_stage>0 && ofGetFrameNum()%120==(int)abs(120*sin(ofGetFrameNum()))){
+//        int count=(int)ofRandom(1,4);
+//        float tx=width;
+//        for(int i=0;i<count;++i){
+//            float tw=ofRandom(.05,.2)*width;
+//            front_blocks.push_back(new LightBlock(tx,height*.3,tw,height*.3,0));
+//            tx+=tw;
+//        }
+//    }
+    
 	if(fmod(road_sign_num,width)==0){
 			front_blocks.push_back(new SignBlock(width,height*.3,width/3,height*.3,0,road_sign_num/100));					
 	}

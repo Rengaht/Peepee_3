@@ -317,46 +317,60 @@ public:
 		ofClear(255,255,255,0);
 	
 		
-		for(int i=0;i<140;++i){
-			ofVec2f pos(ofRandom(wid),ofRandom(hei));
-			ofPushStyle();
-			int ic=(int)ofRandom(5);
-			ofSetColor(245+ofRandom(-10,10),200+ofRandom(50));
-			ofBeginShape();
-				int mang=(int)(5*(sin(pos.y*2)*.5+1));
-				float tmp_ang=0;
-		
-				for(int k=0;k<mang;++k){
-					float tmp_rad=12*(sin(pos.y*2+k)*.3+1);
-					ofVec2f tmpv(0,tmp_rad);
-					tmpv.rotate(tmp_ang*RAD_TO_DEG);
-					ofVertex(pos.x+tmpv.x,pos.y+tmpv.y);
-
-					tmp_ang+=(TWO_PI/mang)*(sin(pos.x)*.4+1);
-				}
-			ofEndShape(true);
-			ofPopStyle();
-		}
+		//		for(int i=0;i<140;++i){
+        //			ofVec2f pos(ofRandom(wid),ofRandom(hei));
+        //			ofPushStyle();
+        //			int ic=(int)ofRandom(5);
+        //			ofSetColor(245+ofRandom(-10,10),200+ofRandom(50));
+        //			ofBeginShape();
+        //				int mang=(int)(5*(sin(pos.y*2)*.5+1));
+        //				float tmp_ang=0;
+        //
+        //				for(int k=0;k<mang;++k){
+        //					float tmp_rad=12*(sin(pos.y*2+k)*.3+1);
+        //					ofVec2f tmpv(0,tmp_rad);
+        //					tmpv.rotate(tmp_ang*RAD_TO_DEG);
+        //					ofVertex(pos.x+tmpv.x,pos.y+tmpv.y);
+        //
+        //					tmp_ang+=(TWO_PI/mang)*(sin(pos.x)*.4+1);
+        //				}
+        //			ofEndShape(true);
+        //			ofPopStyle();
+        //		}
 		
 		ofPushMatrix();
 		float line_wei=2;
-		float line_count=hei/line_wei;
+		float line_count=wid/line_wei;
 		for(int i=0;i<line_count;++i){
 			
 			ofSetColor(245+ofRandom(-10,10),180+ofRandom(70));
-
-			ofTranslate(0,line_wei*ofRandom(.8,1.2));
+            
+			ofTranslate(line_wei*ofRandom(.8,1.2),0);
 			
-			ofSetLineWidth(ofRandom(3,8));
-			ofBeginShape();
+			//			ofSetLineWidth(ofRandom(3,8));
+            //			ofBeginShape();
 			int curve_count=ofRandom(5,20);
 			for(int k=0;k<curve_count;++k){
-				ofVertex(wid/(float)curve_count*(float)k,ofRandom(-2,2)*line_wei);
+				//ofVertex(wid/(float)curve_count*(float)k,ofRandom(-2,2)*line_wei);
+                ofVec2f pos(ofRandom(-.2,.2)*line_wei,hei/(float)curve_count*(float)k);
+                ofBeginShape();
+                int mang=(int)ofRandom(3,5);
+                float tmp_ang=0;
+                float tmp_rad=line_wei*(sin(pos.y*2)*.3+1);
+                
+                for(int k=0;k<mang;++k){
+                    ofVec2f tmpv(0,tmp_rad);
+                    tmpv.rotate(tmp_ang*RAD_TO_DEG);
+                    ofVertex(pos.x+tmpv.x,pos.y+tmpv.y);
+                    
+                    tmp_ang+=(TWO_PI/mang)*(sin(pos.x)*.4+1);
+                }
+                ofEndShape(true);
+                
 			}
-			ofEndShape();
+            //			ofEndShape();
 			//ofLine(ofRandom(.5)*wid,0,ofRandom(.5,1)*wid,0);
-		}
-		ofPopMatrix();
+		}		ofPopMatrix();
 
 		ofPopStyle();
 		

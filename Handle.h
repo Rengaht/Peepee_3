@@ -7,7 +7,7 @@
 class THandle:public TrainBase{
 	
 	//float x,y,wid,hei;
-	ofColor fofColor;
+	ofColor fcolor;
 	int mstroke;
 	float phi;
 public:
@@ -18,17 +18,18 @@ public:
 		mstroke=floor(ofRandom(1,4));
 		phi=ofRandom(TWO_PI);
 
-		fofColor=ofColor(155,159,150);
+		fcolor=ofColor(155,159,150);
 	}
-	void draw(bool draw_fill,float dx_){
+	void draw(bool draw_fill,float dx_,ofColor scolor){
 		
 		ofPushStyle();
 		if(draw_fill){
-			ofSetColor(fofColor);
+			ofSetColor(fcolor);
 			
 		}else{
-			ofSetColor(0);
+			ofSetColor(scolor!=ofColor::white?ofColor::white:ofColor::black);
 			ofNoFill();
+            //ofNoFill();
 			//ofSetColor(fofColor);
 		}
 
